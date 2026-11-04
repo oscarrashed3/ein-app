@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "EIN",
+    "slug": "ein-app",
+    "scheme": "ein",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F7F6F3",
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.instituteln.ein" },
+    "android": {
+      "package": "com.instituteln.ein",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0938",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": { "favicon": "./assets/favicon.png", "output": "single", "bundler": "metro" },
+    "plugins": [["expo-router", { "asyncRoutes": false }], "expo-font"],
+    "experiments": { "typedRoutes": false }
+  }
+}
