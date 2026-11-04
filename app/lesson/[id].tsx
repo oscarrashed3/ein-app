@@ -11,6 +11,7 @@ import { VideoCard } from "../../src/components/VideoCard";
 import { Draft } from "../../src/components/Draft";
 import { Appear } from "../../src/components/Appear";
 import { Close } from "../../src/components/Icons";
+import { Leon } from "../../src/components/Leon";
 import { Sheet, type SheetData } from "../../src/lesson/Sheet";
 import { Choice } from "../../src/lesson/Choice";
 import { Read } from "../../src/lesson/Read";
@@ -23,7 +24,9 @@ import { XP, lessonById, lessons, modules, type Step } from "../../src/content/l
 import { useProgress } from "../../src/state/progress";
 import { c, ease, f, g } from "../../src/theme";
 
-type Phase = "steps" | "results" | "streak";
+type Phase = "steps" | "retry" | "results" | "streak";
+/** Steps with a right answer. Miss one and it comes back at the end of the lesson until you get it right. */
+const QUESTION = new Set(["choice", "read", "swipe", "order"]);
 
 /** The lesson player: one step at a time, a feedback sheet after each exercise, then results and the streak. */
 export default function LessonScreen() {
@@ -31,7 +34,14 @@ export default function LessonScreen() {
   const lesson = lessonById(String(id));
   const { s, complete } = useProgress();
   const i = useSafeAreaInsets();
-  const [at, setAt] = useState(0);
+  // The order you meet the steps in. Missed questions are added to the end, round after round.
+  const [order, setOrder] = useState<number[]>(() => (lesson ? lesson.steps.map((_, k) => k) : []));
+  const [pos, setPos] = useState(0);
+  const missed = useRef<number[]>([]);
+  const [retryN, setRetryN] = useState(0);
+  const firstLen = lesson?.steps.length ?? 0;
+  const at = order[pos] ?? 0;
+  const retrying = pos >= firstLen;
   const [sheet, setSheet] = useState<SheetData | null>(null);
   const [phase, setPhase] = useState<Phase>("steps");
   const [combo, setCombo] = useState(0);
@@ -56,9 +66,16 @@ export default function LessonScreen() {
     const total = xp + gained;
     if (gained) setXp(total);
     setSheet(null);
-    if (at + 1 < lesson.steps.length) {
-      setAt(at + 1);
+    if (pos + 1 < order.length) {
+      setPos(pos + 1);
       setWatched(false);
+    } else if (missed.current.length) {
+      // Not passed yet: go over only the questions you missed.
+      const again = [...new Set(missed.current)];
+      missed.current = [];
+      setRetryN(again.length);
+      setOrder((o) => [...o, ...again]);
+      setPhase("retry");
     } else {
       const res = complete(lesson.id, { right: tally.current.right, total: tally.current.total, xp: total });
       setResult(res);
@@ -72,16 +89,39 @@ export default function LessonScreen() {
   };
 
   const onReport = (r: Report) => {
-    tally.current.right += r.right;
-    tally.current.total += r.total;
+    if (!r.ok && QUESTION.has(step.k)) missed.current.push(at);
+    // Your score and XP count the first try; a retry is for learning it, not for points.
+    if (!retrying) {
+      tally.current.right += r.right;
+      tally.current.total += r.total;
+      setXp((v) => v + r.xp);
+    }
     if (r.meter !== undefined) tally.current.meter = r.meter;
-    setXp((v) => v + r.xp);
     const nc = r.ok ? combo + 1 : 0;
     setCombo(nc);
     if (Platform.OS !== "web") Haptics.notificationAsync(r.ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning);
-    setSheet(r.sheet);
+    setSheet(retrying ? { ...r.sheet, xp: 0 } : r.sheet);
   };
 
+  if (phase === "retry") {
+    return (
+      <Frame>
+        <View style={{ flex: 1, justifyContent: "center", gap: 14 }}>
+          <Appear>
+            <Leon mood="curious" size={170} ground={false} />
+          </Appear>
+          <Appear i={1}>
+            <T style={st.kick}>Almost there</T>
+            <T v="h1">{retryN === 1 ? "One to go over again." : `${retryN} to go over again.`}</T>
+          </Appear>
+          <Appear i={2}>
+            <T style={st.tryT}>To pass this stop, every answer has to be right. You only redo the {retryN === 1 ? "one" : "ones"} you missed.</T>
+          </Appear>
+        </View>
+        <Button label="Try again" onPress={() => (setPhase("steps"), setPos(pos + 1), setWatched(false))} />
+      </Frame>
+    );
+  }
   if (phase === "results" && result) {
     return (
       <Frame>
@@ -105,7 +145,7 @@ export default function LessonScreen() {
   }
 
   const full = step.k === "roleplay" || step.k === "video";
-  const progress = (at + (sheet ? 1 : 0)) / lesson.steps.length;
+  const progress = retrying ? 1 : (pos + (sheet ? 1 : 0)) / lesson.steps.length;
 
   return (
     <View style={[st.f, { paddingTop: Math.max(i.top, 16) + 8 }]}>
@@ -122,7 +162,7 @@ export default function LessonScreen() {
         <XpChip xp={xp} />
       </View>
 
-      <Animated.View key={at} entering={FadeIn.duration(320).easing(ease)} style={{ flex: 1 }}>
+      <Animated.View key={pos} entering={FadeIn.duration(320).easing(ease)} style={{ flex: 1 }}>
         {full ? (
           <View style={[st.pad, { flex: 1, paddingBottom: Math.max(i.bottom, 16) }]}>
             {step.k === "video" && (
@@ -148,7 +188,8 @@ export default function LessonScreen() {
           </View>
         ) : (
           <ScrollView contentContainerStyle={[st.pad, { paddingBottom: sheet ? 260 : 32, flexGrow: 1 }]} showsVerticalScrollIndicator={false}>
-            <StepBody step={step} onReport={onReport} locked={!!sheet} onInsight={() => advance(XP.insight)} />
+            {retrying && <T style={[st.kick, { marginBottom: 10 }]}>Second try</T>}
+            <StepBody key={pos} step={retrying ? reshuffle(step, pos) : step} onReport={onReport} locked={!!sheet} onInsight={() => advance(XP.insight)} />
           </ScrollView>
         )}
       </Animated.View>
@@ -156,6 +197,18 @@ export default function LessonScreen() {
       {sheet && <Sheet d={sheet} onNext={() => advance(0)} />}
     </View>
   );
+}
+
+/** On a second try the answers move around, so you have to know it, not remember where it was. */
+function reshuffle(step: Step, seed: number): Step {
+  if (step.k !== "choice") return step;
+  const idx = step.options.map((_, k) => k);
+  for (let k = idx.length - 1; k > 0; k--) {
+    const j = (seed * 7 + k * 3) % (k + 1);
+    [idx[k], idx[j]] = [idx[j], idx[k]];
+  }
+  if (idx.every((v, k) => v === k)) idx.push(idx.shift()!);
+  return { ...step, options: idx.map((k) => step.options[k]), answer: idx.indexOf(step.answer) };
 }
 
 function StepBody({ step, onReport, locked, onInsight }: { step: Step; onReport: (r: Report) => void; locked: boolean; onInsight: () => void }) {
@@ -247,6 +300,7 @@ const st = StyleSheet.create({
   xpT: { fontFamily: f.semibold, fontSize: 14, lineHeight: 18, color: c.navy },
   combo: { backgroundColor: c.navy, paddingHorizontal: 8, paddingVertical: 4 },
   comboT: { fontFamily: f.semibold, fontSize: 11, lineHeight: 14, color: c.mint },
+  kick: { fontFamily: f.medium, fontSize: 13, lineHeight: 18, letterSpacing: 0.3, color: c.purple },
   idea: { fontFamily: f.semibold, fontSize: 24, lineHeight: 32, letterSpacing: -0.6, color: c.navy },
   try: { borderRadius: 20, gap: 8, backgroundColor: c.white, borderWidth: 1, borderColor: c.line, padding: g },
   tryT: { fontSize: 16, lineHeight: 24, color: c.ink },
