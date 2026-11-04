@@ -45,6 +45,17 @@ export default function Profile() {
   const total = done.reduce((a, d) => a + d.total, 0);
   const stage = Math.min(width - g * 2 - 32, 400);
   const skinCol = SKINS[look.skin][1];
+  // Weekly XP, against a sample workshop group (prototype data).
+  const weekAgo = new Date(Date.now() - 7 * 864e5);
+  const myWeek = Object.entries(s.xp).filter(([d]) => new Date(d + "T12:00:00") >= weekAgo).reduce((a, [, v]) => a + v, 0);
+  const group = [
+    { name: "Amira", xp: 210 },
+    { name: "Jonas", xp: 165 },
+    { name: "Chloé", xp: 120 },
+    { name: "Ravi", xp: 75 },
+    { name: "Mei", xp: 40 },
+    { name: s.name || "You", xp: myWeek, you: true },
+  ].sort((a, b) => b.xp - a.xp);
 
   return (
     <Screen>
@@ -151,6 +162,44 @@ export default function Profile() {
         </>
       )}
 
+      <Appear i={4} style={st.sec}>
+        <SecHead t="Your workshop group" s="This week · resets Monday" />
+        <View style={st.board}>
+          {group.map((p, i) => (
+            <View key={p.name} style={[st.bRow, p.you && st.bYou]}>
+              <T style={[st.bRank, i < 3 && { color: [c.gold, c.purple, c.mintDeep][i] }]}>{i + 1}</T>
+              <View style={[st.bAv, { backgroundColor: p.you ? c.navy : c.paper2 }]}>
+                <T style={[st.bAvT, p.you && { color: c.white }]}>{p.name.slice(0, 1)}</T>
+              </View>
+              <T style={[st.bName, p.you && { fontFamily: f.semibold }]} numberOfLines={1}>
+                {p.you ? `${p.name} (you)` : p.name}
+              </T>
+              <T style={st.bXp}>{p.xp} XP</T>
+            </View>
+          ))}
+        </View>
+        <T v="small">Everyone from your workshop, cheering each other on. No one drops out. Sample names for the prototype.</T>
+      </Appear>
+
+      <Appear i={5} style={st.sec}>
+        <SecHead t="Your field journal" s={`${done.length} of ${lessons.length} collected`} />
+        <View style={st.journal}>
+          {lessons.map((l, i) => {
+            const got = !!s.done[l.id];
+            const col = [c.gold, c.purple, c.mint][l.module - 1];
+            return (
+              <View key={l.id} style={[st.jCard, got ? { backgroundColor: col + "22", borderColor: col } : st.jLocked]} accessibilityLabel={`${l.title}${got ? "" : ", not collected yet"}`}>
+                <T style={[st.jN, got && { color: c.navy }]}>{i + 1}</T>
+                <T style={[st.jT, !got && { color: c.grey }]} numberOfLines={3}>
+                  {got ? l.title : l.practice ? "Campfire" : "?"}
+                </T>
+              </View>
+            );
+          })}
+        </View>
+        <T v="small">Every lesson you finish adds its idea to your journal, so you can look back before a big conversation.</T>
+      </Appear>
+
       <Appear i={6} style={st.sec}>
         <SecHead t="Settings" />
         <Press style={st.row} onPress={() => set({ reminder: ORDER[(ORDER.indexOf(s.reminder) + 1) % 3] })} accessibilityRole="button">
@@ -255,6 +304,19 @@ const st = StyleSheet.create({
   stage: { borderRadius: 18, backgroundColor: c.cream, alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1, borderColor: c.line },
   tap: { position: "absolute", bottom: 4, fontSize: 11, color: c.ink2 },
   sec: { gap: 12, marginBottom: 28 },
+  board: { backgroundColor: c.white, borderRadius: r.card, borderWidth: 1, borderColor: c.line, padding: 6 },
+  bRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 10, borderRadius: 16 },
+  bYou: { backgroundColor: c.cream },
+  bRank: { fontFamily: f.semibold, fontSize: 15, lineHeight: 18, color: c.ink2, width: 18, textAlign: "center" },
+  bAv: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  bAvT: { fontFamily: f.semibold, fontSize: 14, lineHeight: 17, color: c.navy },
+  bName: { flex: 1, fontFamily: f.medium, fontSize: 15, lineHeight: 20, color: c.ink },
+  bXp: { fontFamily: f.medium, fontSize: 13, lineHeight: 16, color: c.ink2 },
+  journal: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  jCard: { width: "31.5%", minHeight: 78, borderRadius: 16, borderWidth: 1, padding: 10, gap: 4 },
+  jLocked: { borderColor: c.line, borderStyle: "dashed", backgroundColor: "transparent" },
+  jN: { fontFamily: f.semibold, fontSize: 12, lineHeight: 15, color: c.grey },
+  jT: { fontSize: 11.5, lineHeight: 15, color: c.navy, fontFamily: f.medium },
   secHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline", gap: 12 },
   swatches: { flexDirection: "row", justifyContent: "space-between", gap: 4 },
   sw: { flex: 1, alignItems: "center", gap: 6, paddingVertical: 8, borderRadius: 18 },

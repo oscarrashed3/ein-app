@@ -19,6 +19,7 @@ export type State = {
   zones: number[]; // zones whose arrival moment has played
   earnedSeen: number[]; // modules whose colour unlock has been celebrated
   intros?: number[]; // levels whose opening explanation has been shown
+  chests?: string[]; // days whose daily-quest chest was opened
   tod: "auto" | "dawn" | "day" | "dusk" | "night"; // prototype: force the map's time of day
   unlockAll?: boolean; // prototype: open every wardrobe item
 };
@@ -68,6 +69,20 @@ export function bestStreakOf(days: string[]) {
   }
   return best;
 }
+
+/** Daily quests: three small goals that reset each day; finishing all three opens a chest. */
+export const CHEST_XP = 20;
+export function questsOf(s: State, today = dayKey()) {
+  const todays = Object.values(s.done).filter((d) => d.at === today);
+  const xp = s.xp[today] ?? 0;
+  return [
+    { k: "lesson", label: "Finish a lesson", have: Math.min(1, todays.length), need: 1 },
+    { k: "clean", label: "Get every check right in one lesson", have: todays.some((d) => d.total > 0 && d.right === d.total) ? 1 : 0, need: 1 },
+    { k: "xp", label: `Earn ${DAILY_GOAL} XP`, have: Math.min(DAILY_GOAL, xp), need: DAILY_GOAL },
+  ];
+}
+/** Streak freezes: one to start, one more for every 7-day streak, at most 2. A freeze covers one missed day. */
+export const freezesOf = (best: number) => Math.min(2, 1 + Math.floor(best / 7));
 
 /** Monday to Sunday of this week, with whether each day has a lesson. */
 export function weekOf(days: string[], today = new Date()) {
