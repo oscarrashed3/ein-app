@@ -18,6 +18,7 @@ export type State = {
   mapAt: string | null; // the node Leon was last seen standing on (drives the hop after a lesson)
   zones: number[]; // zones whose arrival moment has played
   earnedSeen: number[]; // modules whose colour unlock has been celebrated
+  intros?: number[]; // levels whose opening explanation has been shown
   tod: "auto" | "dawn" | "day" | "dusk" | "night"; // prototype: force the map's time of day
   unlockAll?: boolean; // prototype: open every wardrobe item
 };

@@ -12,7 +12,9 @@ import { Check, Lock } from "../../src/components/Icons";
 import { useProgress } from "../../src/state/progress";
 import { lessons, lessonsIn, level, modules, type Lesson, type Step } from "../../src/content/level1";
 import { c, f, g, glass, r } from "../../src/theme";
-import { ISLANDS, ZONES } from "../../src/world/world";
+import { ZONES } from "../../src/world/world";
+import { LEVELS } from "../../src/content/levels";
+import { LevelIntro } from "../../src/world/LevelIntro";
 
 const COL = [c.gold, c.purple, c.mint];
 const INK = ["#8A6410", c.purpleDeep, c.mintDeep];
@@ -29,9 +31,11 @@ export default function Lessons() {
   const done = Object.keys(s.done).length;
   const curMod = n?.module ?? 3;
   const [open, setOpen] = useState<number[]>([curMod]);
+  const [intro, setIntro] = useState<1 | 2 | 3 | 4 | null>(null);
   const toggle = (m: number) => setOpen((o) => (o.includes(m) ? o.filter((x) => x !== m) : [...o, m]));
 
   return (
+    <>
     <Screen>
       <Appear style={st.head}>
         <T v="small">Level {level.n} · Quiet Shore</T>
@@ -44,6 +48,9 @@ export default function Lessons() {
         <T v="small">
           {done} of {lessons.length} done · After the workshop “{level.workshop}”
         </T>
+        <Press onPress={() => setIntro(1)} accessibilityRole="button" style={st.about}>
+          <T style={st.aboutT}>What this level is about</T>
+        </Press>
       </Appear>
 
       {n && (
@@ -115,20 +122,29 @@ export default function Lessons() {
         );
       })}
 
-      <Appear i={5} style={st.l2}>
-        <View style={st.l2Head}>
-          <View style={{ gap: 2 }}>
-            <T style={[st.zName, { color: c.ink2 }]}>Level 2 · {ISLANDS[0].name}</T>
-            <T v="h3">Tools and techniques</T>
-          </View>
-          <Lock />
-        </View>
-        <T v="small">Good questions, empathy and rapport, deals that stick. Opens after your Level 2 workshop.</T>
+      <Appear i={5} style={{ gap: 10, marginTop: 8 }}>
+        <T style={[st.zName, { color: c.ink2 }]}>The journey ahead</T>
+        {LEVELS.slice(1).map((L) => (
+          <Press key={L.n} onPress={() => setIntro(L.n)} accessibilityRole="button" accessibilityLabel={`Level ${L.n}, ${L.title}, locked. See what it is about`} style={st.l2}>
+            <View style={st.l2Head}>
+              <View style={{ gap: 2, flex: 1 }}>
+                <T style={[st.zName, { color: c.ink2 }]}>
+                  Level {L.n} · {L.place}
+                </T>
+                <T v="h3">{L.title}</T>
+              </View>
+              <Lock />
+            </View>
+            <T v="small">{L.modules.map((m) => m.title).join(" · ")}</T>
+          </Press>
+        ))}
       </Appear>
       <Appear i={6} style={{ marginTop: 20 }}>
         <Draft label="Lesson content is a draft for ILN" />
       </Appear>
     </Screen>
+      {intro && <LevelIntro n={intro} locked={intro > 1} onDone={() => setIntro(null)} />}
+    </>
   );
 }
 
@@ -154,5 +170,7 @@ const st = StyleSheet.create({
   rT: { fontFamily: f.medium, fontSize: 15, lineHeight: 20, color: c.ink },
   rS: { fontSize: 12, lineHeight: 16, color: c.ink2 },
   l2: { borderRadius: r.card, gap: 8, padding: g, borderWidth: 1, borderColor: c.line, borderStyle: "dashed", marginTop: 8 },
+  about: { alignSelf: "flex-start", marginTop: 4, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 18, borderWidth: 1, borderColor: c.navy },
+  aboutT: { fontFamily: f.medium, fontSize: 13, lineHeight: 17, color: c.navy },
   l2Head: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
 });
