@@ -4,7 +4,7 @@ import Svg, { Circle, Defs, Ellipse, Path, RadialGradient, Rect, Stop } from "re
 import { useReducedMotion } from "react-native-reanimated";
 import { Rise } from "../components/Rise";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Leon, type LeonHandle } from "../components/Leon";
+import { Leon, STAGES, type LeonHandle } from "../components/Leon";
 import { T } from "../components/T";
 import { Button } from "../components/Button";
 import { c, ease, f, g } from "../theme";
@@ -130,8 +130,8 @@ export function ColourEarned({ from, to, module, onDone }: { from: Skin; to: Ski
       <Rise delay={900} style={{ paddingHorizontal: g, gap: 18 }}>
         <T style={[st.body, all && { color: c.onNavy2 }]}>
           {all
-            ? "He can read the room now. The fog over the Listening Jungle is lifting. Level 2 opens after your next ILN workshop."
-            : `It's his to keep, and he's wearing it now. ${module === 1 ? "Next stop: the river." : "Next stop: the Lookout."} You can change his look in your profile.`}
+            ? "He's grown into an agile chameleon who can read the room. The fog over the Listening Jungle is lifting. Level 2 opens after your next ILN workshop."
+            : `He's grown, too: he's ${STAGES[module].name.toLowerCase() === "young" ? "no longer a hatchling" : "an " + STAGES[module].name.toLowerCase() + " now"}, and the colour is his to keep. ${module === 1 ? "Next stop: the river." : "Next stop: the Lookout."}`}
         </T>
         <Button label="Continue" kind={all ? "light" : "primary"} onPress={onDone} />
       </Rise>

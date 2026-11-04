@@ -178,6 +178,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
 /** Leon's saved look, or null outside the provider (Leon can draw himself anywhere). */
 export const useLookMaybe = () => useContext(C)?.s.look ?? null;
+/** How grown-up Leon is: one step per module finished, more with each level. */
+export const useStageMaybe = () => useContext(C)?.earned.length ?? 0;
 
 export const useProgress = () => {
   const v = useContext(C);

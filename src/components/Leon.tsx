@@ -17,7 +17,7 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { c, ease } from "../theme";
-import { defaultLook, useLookMaybe, type Look } from "../state/progress";
+import { defaultLook, useLookMaybe, useStageMaybe, type Look } from "../state/progress";
 import { BODY, FIN_GOLD, FIN_MINT, FIN_PURPLE, LEGS_BACK, LEGS_FRONT } from "./leonShapes";
 
 /**
@@ -46,6 +46,20 @@ const MOODS: Record<Mood, MoodSpec> = {
   proud: { tilt: -6, lid: 0, crest: 1, smile: 1, open: 1, look: [0.4, -0.3], glow: 0.8 },
   sleepy: { tilt: 2, lid: 1, crest: 0, smile: 0.1, open: 0, look: [0, 0.4], glow: 0.3 },
 };
+
+/**
+ * Leon grows up with you. Level 1 takes him from hatchling to agile (one step per module);
+ * Levels 2 to 4 make him strong and then a master. size = how big he stands, eye = how big the eye
+ * looks against his head (babies have big eyes), crest = how tall his crest grows, lean = how sleek he is.
+ */
+export const STAGES = [
+  { name: "Hatchling", when: "Where everyone starts", size: 0.62, eye: 1.34, crest: 0.4, lean: 1.06 },
+  { name: "Young", when: "Finish the Seven Stones", size: 0.74, eye: 1.2, crest: 0.62, lean: 1.03 },
+  { name: "Explorer", when: "Cross the river", size: 0.86, eye: 1.08, crest: 0.85, lean: 1 },
+  { name: "Agile", when: "Finish Level 1", size: 0.96, eye: 1, crest: 1, lean: 0.95 },
+  { name: "Strong", when: "Finish Level 2", size: 1.04, eye: 0.94, crest: 1.2, lean: 0.98 },
+  { name: "Master", when: "Reach The Table", size: 1.1, eye: 0.9, crest: 1.4, lean: 0.95 },
+];
 
 /** Skin colours: [tail, middle, head]. Leon starts nearly colourless and earns the logo colours. */
 export const SKINS: Record<Look["skin"], [string, string, string]> = {
@@ -83,14 +97,18 @@ type Props = {
   interactive?: boolean;
   /** Override the learner's saved look (the wardrobe previews with this). */
   look?: Partial<Look>;
+  /** Override how grown-up he is (0 hatchling … 5 master). */
+  stage?: number;
 };
 
 export const Leon = forwardRef<LeonHandle, Props>(
-  function Leon({ mood = "calm", headColor, size = 160, style, onTap, ground = true, glow = true, interactive = true, look: lookProp }, ref) {
+  function Leon({ mood = "calm", headColor, size = 160, style, onTap, ground = true, glow = true, interactive = true, look: lookProp, stage: stageProp }, ref) {
     const id = useRef(`l${uid++}`).current;
     const m = MOODS[mood];
     const saved = useLookMaybe();
     const lk: Look = { ...defaultLook, ...(saved ?? {}), ...(lookProp ?? {}) };
+    const savedStage = useStageMaybe();
+    const sg = STAGES[Math.max(0, Math.min(5, stageProp ?? savedStage))];
     const [tailC, midC, headC] = SKINS[lk.skin];
     const reduce = useReducedMotion();
     // Colours animate when the skin changes (the colour-unlock moment) or when a role-play reads the room.
@@ -133,6 +151,8 @@ export const Leon = forwardRef<LeonHandle, Props>(
       lookY.value = withTiming(m.look[1], { duration: 240, easing: ease });
       glowK.value = withTiming(m.glow, { duration: 800 });
     }, [mood, headColor, lk.skin]);
+    const grow = `translate(175 252) scale(${sg.size} ${sg.size * sg.lean}) translate(-175 -252)`;
+    const eyeK = `translate(271 119) scale(${sg.eye}) translate(-271 -119)`;
 
     useEffect(() => {
       if (!reduce) breath.value = withRepeat(withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }), -1, true);
@@ -216,7 +236,7 @@ export const Leon = forwardRef<LeonHandle, Props>(
     const finScale = (bx: number, by: number) =>
       useAnimatedProps(() => {
         const k = Math.min(1.4, crest.value + wow.value * 0.7);
-        return { scale: 0.8 + k * 0.4, originX: bx, originY: by };
+        return { scale: (0.8 + k * 0.4) * sg.crest, originX: bx, originY: by };
       });
     const BASES: [number, number][] = [[174, 96], [214, 78], [262, 84]];
     const f0 = finScale(...BASES[0]), f1 = finScale(...BASES[1]), f2 = finScale(...BASES[2]);
@@ -316,6 +336,7 @@ export const Leon = forwardRef<LeonHandle, Props>(
                 <Circle cx="271" cy="119" r="27" />
               </ClipPath>
             </Defs>
+            <G transform={grow}>
             {/* Legs behind the body; the far pair a shade darker. */}
             <Path d={LEGS_BACK} fill={`url(#${id}g)`} />
             <Path d={LEGS_BACK} fill={INK} opacity={0.16} />
@@ -353,11 +374,13 @@ export const Leon = forwardRef<LeonHandle, Props>(
               </G>
             )}
             <AG animatedProps={faceG}>
+              <G transform={eyeK}>
               <Circle cx="271" cy="119" r="27" fill="#fff" />
               <ACircle animatedProps={pupil} fill={INK} />
               <ACircle r="3.2" fill="#fff" animatedProps={glint} />
               <ARect x="240" width="62" height="62" animatedProps={lidProps} clipPath={`url(#${id}e)`} />
               <APath d="M252 121 Q271 133 290 121" stroke={INK} strokeWidth={3.6} fill="none" strokeLinecap="round" animatedProps={closedLine} />
+              </G>
               <APath animatedProps={mouthOpen} fill={INK} />
               <AEllipse animatedProps={tongue} fill={c.gold} />
               <APath animatedProps={mouthProps} stroke={INK} strokeWidth={4} fill="none" strokeLinecap="round" />
@@ -374,6 +397,7 @@ export const Leon = forwardRef<LeonHandle, Props>(
               <Rect x="346" y="62" width="10" height="10" fill={c.purple} transform="rotate(45 351 67)" />
               <Rect x="364" y="42" width="10" height="10" fill={c.mint} transform="rotate(45 369 47)" />
             </AG>
+            </G>
           </Svg>
         </Animated.View>
       </View>

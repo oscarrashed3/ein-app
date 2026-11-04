@@ -8,7 +8,7 @@ import { Screen } from "../../src/components/Screen";
 import { T } from "../../src/components/T";
 import { Appear } from "../../src/components/Appear";
 import { Press } from "../../src/components/Press";
-import { Leon, SKINS, type LeonHandle } from "../../src/components/Leon";
+import { Leon, SKINS, STAGES, type LeonHandle } from "../../src/components/Leon";
 import { Lock } from "../../src/components/Icons";
 import { ACC_AT, bestStreakOf, useProgress, type Look, type State } from "../../src/state/progress";
 import { lessons } from "../../src/content/level1";
@@ -45,6 +45,7 @@ export default function Profile() {
   const total = done.reduce((a, d) => a + d.total, 0);
   const stage = Math.min(width - g * 2 - 32, 400);
   const skinCol = SKINS[look.skin][1];
+  const stageN = earned.length;
   // Weekly XP, against a sample workshop group (prototype data).
   const weekAgo = new Date(Date.now() - 7 * 864e5);
   const myWeek = Object.entries(s.xp).filter(([d]) => new Date(d + "T12:00:00") >= weekAgo).reduce((a, [, v]) => a + v, 0);
@@ -82,7 +83,9 @@ export default function Profile() {
       <Appear i={2} style={st.leonCard}>
         <View style={st.secHead}>
           <T v="h3">Your Leon</T>
-          <T v="small">{earned.length} of 3 colours earned</T>
+          <T v="small">
+            {STAGES[stageN].name} · {earned.length} of 3 colours
+          </T>
         </View>
       <View style={[st.stage, { height: stage * 0.62 }]}>
         <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -107,6 +110,23 @@ export default function Profile() {
               ? `He has earned ${earned.length} of ILN's three colours. The rest come with the next modules.`
               : "He can change colour now. Dress him however you like."}
         </T>
+        {/* He grows up as you do: one stage per module in Level 1, then with each level. */}
+        <View style={st.grow}>
+          {STAGES.map((sg, k) => {
+            const got = k <= stageN;
+            return (
+              <View key={sg.name} style={st.growCol} accessibilityLabel={`${sg.name}${got ? "" : `, ${sg.when}`}`}>
+                <View style={[st.growPad, k === stageN && st.growNow, !got && { opacity: 0.35 }]}>
+                  <Leon stage={k} look={got ? undefined : { skin: "unaware" }} mood="calm" size={44} ground={false} glow={false} interactive={false} />
+                </View>
+                <T style={[st.growT, k === stageN && { color: c.navy, fontFamily: f.semibold }]} numberOfLines={1}>
+                  {sg.name}
+                </T>
+              </View>
+            );
+          })}
+        </View>
+        <T v="small">{stageN < 5 ? `Next: ${STAGES[stageN + 1].name.toLowerCase()}. ${STAGES[stageN + 1].when}.` : "Fully grown."}</T>
         <Button label={dress ? "Done" : "Customise Leon"} kind={dress ? "primary" : "ghost"} onPress={() => setDress(!dress)} />
       </Appear>
       {dress && (
@@ -304,6 +324,11 @@ const st = StyleSheet.create({
   stage: { borderRadius: 18, backgroundColor: c.cream, alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1, borderColor: c.line },
   tap: { position: "absolute", bottom: 4, fontSize: 11, color: c.ink2 },
   sec: { gap: 12, marginBottom: 28 },
+  grow: { flexDirection: "row", justifyContent: "space-between", gap: 4 },
+  growCol: { flex: 1, alignItems: "center", gap: 4 },
+  growPad: { width: "100%", aspectRatio: 1, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: c.cream },
+  growNow: { borderWidth: 1.5, borderColor: c.navy, backgroundColor: c.white },
+  growT: { fontSize: 9.5, lineHeight: 13, color: c.ink2, fontFamily: f.medium },
   board: { backgroundColor: c.white, borderRadius: r.card, borderWidth: 1, borderColor: c.line, padding: 6 },
   bRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 10, borderRadius: 16 },
   bYou: { backgroundColor: c.cream },
