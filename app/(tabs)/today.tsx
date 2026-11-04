@@ -15,7 +15,6 @@ import { Dots } from "../../src/world/Backdrop";
 import { Island, WORLD } from "../../src/world/Island";
 import { NodeView, WORLDSIZE, type NodeState } from "../../src/world/Node";
 import { ColourEarned, ZoneArrival } from "../../src/world/Moments";
-import { LevelIntro } from "../../src/world/LevelIntro";
 import { ISLANDS, MODULE_COLOUR, PALETTES, ZONES, colourHex, layoutIsland, todNow } from "../../src/world/world";
 
 const LEON = 150; // Leon's width in world units
@@ -28,7 +27,7 @@ function hello() {
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
-type Moment = { k: "level"; n: 1 } | { k: "zone"; zone: 1 | 2 | 3 } | { k: "colour"; module: number; from: Skin; to: Skin };
+type Moment = { k: "zone"; zone: 1 | 2 | 3 } | { k: "colour"; module: number; from: Skin; to: Skin };
 
 /**
  * Journey: Quiet Shore as a world you can move around in. Drag to explore, pinch or scroll to zoom,
@@ -144,11 +143,6 @@ export default function Journey() {
       if (!ready || !laidOut) return;
       const st = sRef.current;
       const moments: Moment[] = [];
-      const intros = [...(st.intros ?? [])];
-      if (!intros.includes(1)) {
-        moments.push({ k: "level", n: 1 });
-        intros.push(1);
-      }
       let skin: Skin = st.look.skin;
       const seen = [...st.earnedSeen];
       for (const m of earned) {
@@ -166,7 +160,7 @@ export default function Journey() {
       }
       const p1 = posOf(target)!;
       const p0 = st.mapAt && st.mapAt !== target ? posOf(st.mapAt) : null;
-      if (st.mapAt !== target || moments.length) set({ mapAt: target, zones, earnedSeen: seen, intros, look: { ...st.look, skin } });
+      if (st.mapAt !== target || moments.length) set({ mapAt: target, zones, earnedSeen: seen, look: { ...st.look, skin } });
 
       if (p0 && !reduce) {
         // Start on the stone you just finished: it lights, the path fills, then Leon hops and the camera follows.
@@ -308,7 +302,6 @@ export default function Journey() {
         )}
       </View>
 
-      {cur?.k === "level" && <LevelIntro n={1} onDone={() => setQueue((q) => q.slice(1))} />}
       {cur?.k === "zone" && <ZoneArrival key={`z${cur.zone}`} zone={cur.zone} onDone={() => setQueue((q) => q.slice(1))} />}
       {cur?.k === "colour" && <ColourEarned key={`c${cur.module}`} from={cur.from} to={cur.to} module={cur.module} onDone={() => setQueue((q) => q.slice(1))} />}
     </View>

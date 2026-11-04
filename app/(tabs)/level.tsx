@@ -14,7 +14,6 @@ import { lessons, lessonsIn, level, modules, type Lesson, type Step } from "../.
 import { c, f, g, glass, r } from "../../src/theme";
 import { ZONES } from "../../src/world/world";
 import { LEVELS } from "../../src/content/levels";
-import { LevelIntro } from "../../src/world/LevelIntro";
 
 const COL = [c.gold, c.purple, c.mint];
 const INK = ["#8A6410", c.purpleDeep, c.mintDeep];
@@ -31,7 +30,6 @@ export default function Lessons() {
   const done = Object.keys(s.done).length;
   const curMod = n?.module ?? 3;
   const [open, setOpen] = useState<number[]>([curMod]);
-  const [intro, setIntro] = useState<1 | 2 | 3 | 4 | null>(null);
   const toggle = (m: number) => setOpen((o) => (o.includes(m) ? o.filter((x) => x !== m) : [...o, m]));
 
   return (
@@ -48,9 +46,6 @@ export default function Lessons() {
         <T v="small">
           {done} of {lessons.length} done · After the workshop “{level.workshop}”
         </T>
-        <Press onPress={() => setIntro(1)} accessibilityRole="button" style={st.about}>
-          <T style={st.aboutT}>What this level is about</T>
-        </Press>
       </Appear>
 
       {n && (
@@ -125,7 +120,7 @@ export default function Lessons() {
       <Appear i={5} style={{ gap: 10, marginTop: 8 }}>
         <T style={[st.zName, { color: c.ink2 }]}>The journey ahead</T>
         {LEVELS.slice(1).map((L) => (
-          <Press key={L.n} onPress={() => setIntro(L.n)} accessibilityRole="button" accessibilityLabel={`Level ${L.n}, ${L.title}, locked. See what it is about`} style={st.l2}>
+          <View key={L.n} accessibilityLabel={`Level ${L.n}, ${L.title}, locked`} style={st.l2}>
             <View style={st.l2Head}>
               <View style={{ gap: 2, flex: 1 }}>
                 <T style={[st.zName, { color: c.ink2 }]}>
@@ -136,14 +131,13 @@ export default function Lessons() {
               <Lock />
             </View>
             <T v="small">{L.modules.map((m) => m.title).join(" · ")}</T>
-          </Press>
+          </View>
         ))}
       </Appear>
       <Appear i={6} style={{ marginTop: 20 }}>
         <Draft label="Lesson content is a draft for ILN" />
       </Appear>
     </Screen>
-      {intro && <LevelIntro n={intro} locked={intro > 1} onDone={() => setIntro(null)} />}
     </>
   );
 }
