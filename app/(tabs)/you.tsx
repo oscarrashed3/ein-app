@@ -201,25 +201,6 @@ export default function Profile() {
         <T v="small">Everyone from your workshop, cheering each other on. No one drops out. Sample names for the prototype.</T>
       </Appear>
 
-      <Appear i={5} style={st.sec}>
-        <SecHead t="Your field journal" s={`${done.length} of ${lessons.length} collected`} />
-        <View style={st.journal}>
-          {lessons.map((l, i) => {
-            const got = !!s.done[l.id];
-            const col = [c.gold, c.purple, c.mint][l.module - 1];
-            return (
-              <View key={l.id} style={[st.jCard, got ? { backgroundColor: col + "22", borderColor: col } : st.jLocked]} accessibilityLabel={`${l.title}${got ? "" : ", not collected yet"}`}>
-                <T style={[st.jN, got && { color: c.navy }]}>{i + 1}</T>
-                <T style={[st.jT, !got && { color: c.grey }]} numberOfLines={3}>
-                  {got ? l.title : l.practice ? "Campfire" : "?"}
-                </T>
-              </View>
-            );
-          })}
-        </View>
-        <T v="small">Every lesson you finish adds its idea to your journal, so you can look back before a big conversation.</T>
-      </Appear>
-
       <Appear i={6} style={st.sec}>
         <SecHead t="Settings" />
         <Press style={st.row} onPress={() => set({ reminder: ORDER[(ORDER.indexOf(s.reminder) + 1) % 3] })} accessibilityRole="button">
