@@ -3,5 +3,5 @@ import { useProgress } from "../src/state/progress";
 
 export default function Index() {
   const { s } = useProgress();
-  return <Redirect href={s.onboarded ? "/today" : "/welcome"} />;
+  return <Redirect href={s.onboarded ? "/level" : "/welcome"} />;
 }

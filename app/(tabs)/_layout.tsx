@@ -15,8 +15,8 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: c.paper },
       }}
     >
-      <Tabs.Screen name="today" options={{ title: "Journey", tabBarIcon: ({ color }) => <JourneyIcon color={color as string} /> }} />
       <Tabs.Screen name="level" options={{ title: "Lessons", tabBarIcon: ({ color }) => <PathIcon color={color as string} /> }} />
+      <Tabs.Screen name="today" options={{ title: "Journey", tabBarIcon: ({ color }) => <JourneyIcon color={color as string} /> }} />
       <Tabs.Screen name="you" options={{ title: "Profile", tabBarIcon: ({ color }) => <YouIcon color={color as string} /> }} />
     </Tabs>
   );

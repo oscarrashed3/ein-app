@@ -24,7 +24,7 @@ function hello() {
  * Everything that floats over the Journey, shared by the 3D world and the simple map:
  * chips (quests, streak, XP), Back to Leon, the next-lesson card, and the quests and streak sheets.
  */
-export function JourneyHud({ n, vpw, away, onBack, leon, onCard }: { n: MapNode | null; vpw: number; away: boolean; onBack: () => void; leon: RefObject<LeonHandle | null>; onCard?: (h: number) => void }) {
+export function JourneyHud({ n, vpw, away, onBack, leon, onCard, card = true }: { n: MapNode | null; vpw: number; away: boolean; onBack: () => void; leon: RefObject<LeonHandle | null>; onCard?: (h: number) => void; card?: boolean }) {
   const { s, set, totalXp, streak } = useProgress();
   const ins = useSafeAreaInsets();
   const zone = n ? ZONES[n.zone - 1] : null;
@@ -37,45 +37,41 @@ export function JourneyHud({ n, vpw, away, onBack, leon, onCard }: { n: MapNode 
   const freezes = freezesOf(best);
   return (
     <>
-    {/* Top: ILN mark, streak and XP on glass, the greeting on its own line */}
+    {/* Top: the ILN mark, then one quiet bar with quests, streak and XP */}
     <View style={[st.top, { paddingTop: Math.max(ins.top, 12) + 6 }]} pointerEvents="box-none">
       <View style={st.topRow} pointerEvents="box-none">
-        {vpw >= 380 ? (
-          <View style={[st.chip, glass()]}>
-            <Mark width={40} />
-          </View>
-        ) : (
-          <View />
-        )}
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <Press onPress={() => setSheet("quests")} accessibilityRole="button" accessibilityLabel={`Daily quests, ${qDone} of 3 done`} style={[st.chip, glass(c.purple)]}>
+        <View style={[st.bar, glass()]}>
+          <Mark width={34} />
+        </View>
+        <View style={[st.bar, glass()]}>
+          <Press onPress={() => setSheet("quests")} accessibilityRole="button" accessibilityLabel={`Daily quests, ${qDone} of 3 done`} style={st.seg}>
             <Chest open={chestOpen} />
-            <T style={st.chipN}>{qDone}/3</T>
+            <T style={st.segN}>{qDone}/3</T>
           </Press>
-          <Press onPress={() => setSheet("streak")} accessibilityRole="button" accessibilityLabel={`${streak} day streak`} style={[st.chip, glass(c.mint)]}>
-            <Dotty col={c.mint} />
-            <T style={st.chipN}>{streak}</T>
-            <T style={st.chipU}>days</T>
+          <View style={st.div} />
+          <Press onPress={() => setSheet("streak")} accessibilityRole="button" accessibilityLabel={`${streak} day streak`} style={st.seg}>
+            <Flame />
+            <T style={st.segN}>{streak}</T>
           </Press>
-          <View style={[st.chip, glass(c.gold)]} accessibilityLabel={`${totalXp} XP`}>
-            <Dotty col={c.gold} />
-            <T style={st.chipN}>{totalXp}</T>
-            <T style={st.chipU}>XP</T>
+          <View style={st.div} />
+          <View style={st.seg} accessibilityLabel={`${totalXp} XP`}>
+            <Spark />
+            <T style={st.segN}>{totalXp}</T>
           </View>
         </View>
       </View>
     </View>
 
     {away && (
-      <View style={st.find} pointerEvents="box-none">
+      <View style={[st.find, card ? null : { bottom: 20 }]} pointerEvents="box-none">
         <Press onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Leon" style={[st.findB, glass()]}>
           <T style={st.findT}>Back to Leon</T>
         </Press>
       </View>
     )}
 
-    {/* Bottom: the next step, one black pill */}
-    <View style={[st.card, glass(zone ? colourHex[MODULE_COLOUR[zone.n]] : c.navy)]} onLayout={onCard ? (e) => onCard(e.nativeEvent.layout.height) : undefined}>
+    {/* Bottom: the next step, one black pill (the simple map only; the 3D world opens a stop when you tap it) */}
+    {card && <View style={[st.card, glass(zone ? colourHex[MODULE_COLOUR[zone.n]] : c.navy)]} onLayout={onCard ? (e) => onCard(e.nativeEvent.layout.height) : undefined}>
       {n && zone ? (
         <>
           <View style={st.cardTop}>
@@ -96,7 +92,7 @@ export function JourneyHud({ n, vpw, away, onBack, leon, onCard }: { n: MapNode 
           <Button label="Open your profile" onPress={() => router.push("/you")} />
         </>
       )}
-    </View>
+    </View>}
 
     {sheet === "quests" && (
       <Sheet kicker="Resets at midnight" title="Daily quests" onClose={() => setSheet(null)}>
@@ -177,6 +173,22 @@ function Freeze() {
   );
 }
 
+function Flame() {
+  return (
+    <Svg width={14} height={17} viewBox="0 0 14 17">
+      <Path d="M7 1 C8.4 4 12.5 6 12.5 10.6 C12.5 14 10 16 7 16 C4 16 1.5 14 1.5 10.9 C1.5 8.4 3 6.8 4.4 5.6 C4.6 7.6 5.4 8.6 6.4 9 C6 6 6.2 3.4 7 1Z" fill={c.mint} />
+      <Path d="M7 9.6 C8.2 10.8 9.2 11.8 9.2 13.2 C9.2 14.5 8.2 15.3 7 15.3 C5.8 15.3 4.8 14.5 4.8 13.3 C4.8 12 5.8 11 7 9.6Z" fill="#B8F5E0" />
+    </Svg>
+  );
+}
+function Spark() {
+  return (
+    <Svg width={15} height={15} viewBox="0 0 16 16">
+      <Path d="M8 0.8 C8.7 5 11 7.3 15.2 8 C11 8.7 8.7 11 8 15.2 C7.3 11 5 8.7 0.8 8 C5 7.3 7.3 5 8 0.8Z" fill={c.gold} />
+    </Svg>
+  );
+}
+
 /** A tiny dotted mark for the chips, after Pulse's dotted charts. */
 function Dotty({ col }: { col: string }) {
   return (
@@ -211,6 +223,10 @@ const st = StyleSheet.create({
   qBar: { height: 6, borderRadius: 3, backgroundColor: c.paper2, overflow: "hidden" },
   qFill: { height: "100%", borderRadius: 3, backgroundColor: c.mint },
   chestRow: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 20, backgroundColor: c.white, borderWidth: 1, borderColor: c.line },
+  bar: { height: 38, borderRadius: 19, paddingHorizontal: 12, flexDirection: "row", alignItems: "center" },
+  seg: { height: 38, paddingHorizontal: 9, flexDirection: "row", alignItems: "center", gap: 6 },
+  segN: { fontFamily: f.semibold, fontSize: 15, lineHeight: 19, letterSpacing: -0.3, color: c.navy, fontVariant: ["tabular-nums"] } as any,
+  div: { width: 1, height: 16, backgroundColor: "rgba(10,9,56,0.12)" },
   chip: { height: 40, borderRadius: 20, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 6 },
   chipN: { fontFamily: f.semibold, fontSize: 18, lineHeight: 22, letterSpacing: -0.6, color: c.navy },
   chipU: { fontFamily: f.medium, fontSize: 11, lineHeight: 14, color: c.ink2 },

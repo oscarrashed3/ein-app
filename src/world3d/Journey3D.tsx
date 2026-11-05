@@ -15,6 +15,7 @@ import { ColourEarned, ZoneArrival } from "../world/Moments";
 import { MODULE_COLOUR, layoutIsland, todNow } from "../world/world";
 import { Canvas3D } from "./Canvas3D";
 import { World, type StopState } from "./World";
+import { StopCard, ZoneTitle } from "./Overlays";
 
 const L = 120; // Leon's drawn width in px before perspective scaling
 const LH = (L * 150) / 250;
@@ -48,7 +49,8 @@ export default function Journey3D() {
   const gx = useSharedValue(-999), gy = useSharedValue(-999), gOn = useSharedValue(0), vpw = useSharedValue(390);
   const [away, setAway] = useState(false);
   const awayRef = useRef(false);
-  const cardRef = useRef(200);
+  const cardRef = useRef(70);
+  useEffect(() => world.setSafe(ins.top + 70, 60), [ins.top, world]);
   const vpRef = useRef(vp);
   vpRef.current = vp;
   const onFrame = useCallback(() => {
@@ -67,13 +69,16 @@ export default function Journey3D() {
     const gt = world.gateScreen();
     gx.value = gt.x;
     gy.value = gt.y;
-    const on = gt.visible && gt.y > 150 && gt.y < h - 280 ? 1 : 0;
+    const on = gt.visible && world.zoneInView() === 4 && gt.y > 150 && gt.y < h - 160 ? 1 : 0;
     if (on !== gOn.value) gOn.value = withTiming(on, { duration: 260 });
   }, [world]);
   const leonStyle = useAnimatedStyle(() => ({ transform: [{ translateX: lx.value }, { translateY: ly.value }, { scale: lk.value }] }));
-  const gateStyle = useAnimatedStyle(() => ({ opacity: gOn.value, transform: [{ translateX: Math.max(12, Math.min(vpw.value - 292, gx.value - 140)) }, { translateY: Math.max(108, gy.value - 130) }] }));
+  const gateStyle = useAnimatedStyle(() => ({ opacity: gOn.value, transform: [{ translateX: Math.max(12, Math.min(vpw.value - 292, gx.value - 140)) }, { translateY: Math.max(150, gy.value - 130) }] }));
 
   // ---- walking the path: drag, fling, wheel; a tap opens a stop ----
+  const [picked, setPicked] = useState<string | null>(null);
+  const pickRef = useRef<(id: string | null) => void>(() => {});
+  pickRef.current = (id) => setPicked(id);
   const moved = useRef(false);
   const last = useRef(0);
   const pan = useMemo(
@@ -83,6 +88,7 @@ export default function Journey3D() {
         onMoveShouldSetPanResponderCapture: (_, gs) => Math.abs(gs.dy) > 6,
         onPanResponderGrant: () => {
           moved.current = false;
+          pickRef.current(null);
           last.current = 0;
           world.dragStart();
         },
@@ -95,8 +101,7 @@ export default function Journey3D() {
           world.dragEnd(moved.current ? gs.vy : 0);
           if (!moved.current) {
             const { locationX, locationY } = e.nativeEvent;
-            const id = world.pick(locationX, locationY);
-            if (id && (stateRef.current[id] ?? "locked") !== "locked") router.push(`/lesson/${id}`);
+            pickRef.current(world.pick(locationX, locationY));
           }
         },
         onPanResponderTerminate: () => world.dragEnd(0),
@@ -189,7 +194,7 @@ export default function Journey3D() {
       <View ref={box} style={st.f} onLayout={onLayout} {...pan.panHandlers}>
         {laidOut && <Canvas3D world={world} onFrame={onFrame} />}
         <Animated.View style={[st.leon, leonStyle]} pointerEvents="box-none">
-          <Leon ref={leon} mood={mood} size={L} ground={false} glow={false} />
+          <Leon ref={leon} mood={mood} size={L} ground={false} glow={false} onTap={() => nid && setPicked(nid)} />
         </Animated.View>
         <Animated.View style={[st.gate, glass(), gateStyle]} pointerEvents="none">
           <View style={st.gateRow}>
@@ -200,7 +205,9 @@ export default function Journey3D() {
           <T style={st.gateS}>{levelDone ? "Opens after your Level 2 workshop" : "Finish Level 1 to open"}</T>
         </Animated.View>
       </View>
-      <JourneyHud n={n} vpw={vp.w} away={away} onBack={() => world.focusLeon(true)} leon={leon} onCard={(h) => { cardRef.current = h + 12; world.setSafe(ins.top + 64, h + 24); if (!world.hopping) world.focusLeon(false); }} />
+      <JourneyHud n={n} vpw={vp.w} away={away} onBack={() => world.focusLeon(true)} leon={leon} card={false} />
+      <ZoneTitle world={world} top={ins.top + 64} />
+      {picked && <StopCard key={picked} id={picked} state={states[picked] ?? "locked"} onClose={() => setPicked(null)} />}
       {cur?.k === "zone" && <ZoneArrival key={`z${cur.zone}`} zone={cur.zone} onDone={() => setQueue((q) => q.slice(1))} />}
       {cur?.k === "colour" && <ColourEarned key={`c${cur.module}`} from={cur.from} to={cur.to} module={cur.module} onDone={() => setQueue((q) => q.slice(1))} />}
     </View>

@@ -159,7 +159,7 @@ const st = StyleSheet.create({
   list: { padding: 8, paddingTop: 10, gap: 2 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 10, borderRadius: 16 },
   rowNext: { backgroundColor: c.cream, borderWidth: 1, borderColor: c.navy },
-  rowFire: { backgroundColor: "#FBF5EA" },
+  rowFire: { backgroundColor: "#FBF6EA" },
   mark: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: c.line, alignItems: "center", justifyContent: "center", backgroundColor: c.white },
   rT: { fontFamily: f.medium, fontSize: 15, lineHeight: 20, color: c.ink },
   rS: { fontSize: 12, lineHeight: 16, color: c.ink2 },

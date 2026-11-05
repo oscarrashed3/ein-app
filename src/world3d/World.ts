@@ -216,6 +216,21 @@ export class World {
     this.leonT = tA;
     this.hopState = { a, b, tA, tB, t0: this.time, dur: 0.42 * n + 0.2, n, done };
   }
+  /** Which area the camera is looking at: 1-3 = the zones of Quiet Shore, 4 = the gate to Level 2. */
+  zoneInView() {
+    const t = clamp((this.s + 2) / this.len);
+    const last = this.stopT[this.stopT.length - 1];
+    if (t > last + 3 / this.len || this.s >= this.sMax - 1.5) return 4;
+    let best = 0, bd = 9;
+    this.stopT.forEach((q, i) => {
+      const d = Math.abs(q - t);
+      if (d < bd) {
+        bd = d;
+        best = i;
+      }
+    });
+    return this.stops[best].module as number;
+  }
   /** The camera stops short of the gate, so it always stands in view at the end of the land. */
   get sMax() {
     return this.len - 7;
@@ -368,18 +383,13 @@ export class World {
         sA.setXYZ(si, Math.min(1.6, l + flash), st === "next" ? 1 : 0, 0);
         si++;
       } else if (s.kind === "plank") {
-        const built = st === "done";
+        const pA2 = this.planks.geometry.getAttribute("aState") as InstancedBufferAttribute;
         for (let k = 0; k < 4; k++) {
           const i = pi * 4 + k;
-          this.plankBase[i].decompose(pos, q, sc);
-          // planks drop into place when their section is learned
-          const grow = built ? clamp(l * 1.25) : 0;
-          sc.setScalar(grow < 0.01 ? 0 : 1);
-          pos.y += (1 - easeOut(grow)) * 0.6;
-          m.compose(pos, q, sc);
-          this.planks.setMatrixAt(i, m);
-          gA.setXYZ(i, built ? 0 : st === "next" ? 0.75 + 0.25 * Math.sin(t * 2.6) : 0.12, 0, 0);
+          pA2.setXYZ(i, st === "done" ? Math.min(1.6, l * 0.55 + flash) : st === "next" ? 0.9 : 0, st === "next" ? 1 : 0, 0);
+          gA.setXYZ(i, 0, 0, 0);
         }
+        pA2.needsUpdate = true;
         pi++;
       } else if (s.kind === "fire") {
         fA.setXYZ(fi, st === "done" ? clamp(l) + flash : st === "next" ? 0.35 + 0.1 * Math.sin(t * 3) : 0, fi * 0.37, 0);
@@ -729,7 +739,12 @@ export class World {
     this.scene.add(frame);
 
     // planks: 5 sections of 4; wood where learned, light where not yet
-    const plank = paint(new BoxGeometry(B.width, 0.07, 0.3), "#8E6A4E", 0, 0.25);
+    // Every plank is there from the start: a whole, walkable bridge. Each one carries a thin inlay
+    // that lights in the module's colour when its lesson is learned; the next section pulses.
+    const plank = merge([
+      paint(new BoxGeometry(B.width, 0.07, 0.3), "#8A6649", 0, 0.3),
+      paint(put(new BoxGeometry(B.width * 0.7, 0.012, 0.022), [0, 0.04, 0]), "#4A3A2E", 1),
+    ]);
     const planks = this.stops.filter((s) => s.kind === "plank");
     const n = planks.length * 4;
     this.planks = new InstancedMesh(plank, propMaterial(this.u), n);
@@ -756,8 +771,21 @@ export class World {
     this.ghost.geometry.setAttribute("aLight", new InstancedBufferAttribute(gl, 3));
     this.planks.frustumCulled = this.ghost.frustumCulled = false;
     this.ghost.renderOrder = 6;
+    this.planks.geometry.setAttribute("aState", new InstancedBufferAttribute(new Float32Array(n * 3), 3));
+    this.planks.geometry.setAttribute("aLight", new InstancedBufferAttribute(gl.slice(), 3));
     this.cast(this.planks);
-    this.scene.add(this.planks, this.ghost);
+    this.scene.add(this.planks);
+    // the planks at each end, from the bank to the first section
+    const ends: Matrix4[] = [];
+    for (const [z0, dir] of [[B.z0 + 0.1, -1], [B.z1 - 0.1, 1]] as const) {
+      const first = dir < 0 ? planks[0].pos.z + 1.5 * 0.34 : planks[planks.length - 1].pos.z - 1.5 * 0.34;
+      for (let z = z0; dir < 0 ? z > first + 0.2 : z < first - 0.2; z += dir * 0.34)
+        ends.push(new Matrix4().compose(new Vector3(B.x, deckY(z) - 0.02, z), new Quaternion().setFromEuler(new Euler(0, Math.sin(z * 9) * 0.05, 0)), new Vector3(1, 1, 1)));
+    }
+    const em = new InstancedMesh(plank, propMaterial(this.u), ends.length);
+    ends.forEach((m, i) => em.setMatrixAt(i, m));
+    em.frustumCulled = false;
+    this.scene.add(this.cast(em));
   }
 
   private ghostMaterial() {

@@ -8,6 +8,7 @@ import { Poppins_500Medium } from "@expo-google-fonts/poppins/500Medium";
 import { Poppins_600SemiBold } from "@expo-google-fonts/poppins/600SemiBold";
 import { ProgressProvider, useProgress } from "../src/state/progress";
 import { c } from "../src/theme";
+import { Opening } from "../src/components/Opening";
 
 /** On a desktop browser the app sits in a phone-sized frame, so it reads as the mobile app it is. */
 function Frame({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ export default function Root() {
       <ProgressProvider>
         <Frame>
           <Routes />
+          <Opening />
         </Frame>
       </ProgressProvider>
     </SafeAreaProvider>
@@ -50,7 +52,7 @@ export default function Root() {
 }
 
 const s = StyleSheet.create({
-  desk: { flex: 1, backgroundColor: "#E9E7E1", alignItems: "center", justifyContent: "center" },
+  desk: { flex: 1, backgroundColor: "#E4E6EF", alignItems: "center", justifyContent: "center" },
   device: {
     backgroundColor: c.paper,
     borderRadius: 44,
