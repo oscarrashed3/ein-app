@@ -24,7 +24,7 @@ function hello() {
  * Everything that floats over the Journey, shared by the 3D world and the simple map:
  * chips (quests, streak, XP), Back to Leon, the next-lesson card, and the quests and streak sheets.
  */
-export function JourneyHud({ n, vpw, away, onBack, leon }: { n: MapNode | null; vpw: number; away: boolean; onBack: () => void; leon: RefObject<LeonHandle | null> }) {
+export function JourneyHud({ n, vpw, away, onBack, leon, onCard }: { n: MapNode | null; vpw: number; away: boolean; onBack: () => void; leon: RefObject<LeonHandle | null>; onCard?: (h: number) => void }) {
   const { s, set, totalXp, streak } = useProgress();
   const ins = useSafeAreaInsets();
   const zone = n ? ZONES[n.zone - 1] : null;
@@ -75,7 +75,7 @@ export function JourneyHud({ n, vpw, away, onBack, leon }: { n: MapNode | null; 
     )}
 
     {/* Bottom: the next step, one black pill */}
-    <View style={[st.card, glass(zone ? colourHex[MODULE_COLOUR[zone.n]] : c.navy)]}>
+    <View style={[st.card, glass(zone ? colourHex[MODULE_COLOUR[zone.n]] : c.navy)]} onLayout={onCard ? (e) => onCard(e.nativeEvent.layout.height) : undefined}>
       {n && zone ? (
         <>
           <View style={st.cardTop}>

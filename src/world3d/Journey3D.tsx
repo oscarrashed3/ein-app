@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PanResponder, Platform, StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import { Leon, type LeonHandle, type Mood } from "../components/Leon";
 import { T } from "../components/T";
@@ -28,6 +29,7 @@ type Moment = { k: "zone"; zone: 1 | 2 | 3 } | { k: "colour"; module: number; fr
 export default function Journey3D() {
   const { s, ready, set, next, earned } = useProgress();
   const reduce = useReducedMotion();
+  const ins = useSafeAreaInsets();
   const nid = next();
   const target = nid ?? "end";
   const levelDone = !nid;
@@ -46,6 +48,7 @@ export default function Journey3D() {
   const gx = useSharedValue(-999), gy = useSharedValue(-999), gOn = useSharedValue(0), vpw = useSharedValue(390);
   const [away, setAway] = useState(false);
   const awayRef = useRef(false);
+  const cardRef = useRef(200);
   const vpRef = useRef(vp);
   vpRef.current = vp;
   const onFrame = useCallback(() => {
@@ -56,7 +59,7 @@ export default function Journey3D() {
     lk.value = k;
     const h = vpRef.current.h;
     vpw.value = vpRef.current.w;
-    const off = !p.visible || p.y < 90 || p.y > h - 200;
+    const off = !p.visible || p.y < 90 || p.y > h - cardRef.current - 20;
     if (off !== awayRef.current) {
       awayRef.current = off;
       setAway(off);
@@ -197,7 +200,7 @@ export default function Journey3D() {
           <T style={st.gateS}>{levelDone ? "Opens after your Level 2 workshop" : "Finish Level 1 to open"}</T>
         </Animated.View>
       </View>
-      <JourneyHud n={n} vpw={vp.w} away={away} onBack={() => world.focusLeon(true)} leon={leon} />
+      <JourneyHud n={n} vpw={vp.w} away={away} onBack={() => world.focusLeon(true)} leon={leon} onCard={(h) => { cardRef.current = h + 12; world.setSafe(ins.top + 64, h + 24); if (!world.hopping) world.focusLeon(false); }} />
       {cur?.k === "zone" && <ZoneArrival key={`z${cur.zone}`} zone={cur.zone} onDone={() => setQueue((q) => q.slice(1))} />}
       {cur?.k === "colour" && <ColourEarned key={`c${cur.module}`} from={cur.from} to={cur.to} module={cur.module} onDone={() => setQueue((q) => q.slice(1))} />}
     </View>

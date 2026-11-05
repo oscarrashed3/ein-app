@@ -134,6 +134,18 @@ export class World {
   exposure = 1;
   dpr = 1;
   rig = { x: 1.2, y: 4.0, z: 11.5, frac: 0.07, fo: 0 };
+  /** The clear band between the header (top px) and the bottom card (bottom px): Leon stands in it. */
+  setSafe(top: number, bottom: number) {
+    this.safe = { top, bottom };
+    this.fitFrac();
+  }
+  private safe = { top: 96, bottom: 250 };
+  private fitFrac() {
+    const h = this.size.y;
+    const band = Math.max(80, h - this.safe.top - this.safe.bottom);
+    const y = this.safe.top + band * 0.66; // Leon's feet; his body rises above
+    this.rig.frac = Math.max(-0.6, Math.min(0.5, (y - h / 2) / (h / 2)));
+  }
   setReduced(r: boolean) {
     this.reduce = r;
   }
@@ -143,7 +155,7 @@ export class World {
     // Portrait phones get a slightly wider lens so the path never feels cramped.
     this.camera.fov = w / h < 0.6 ? 58 : 48;
     // Leon sits in the clear band between the header and the bottom card, whatever the phone's height.
-    this.rig.frac = Math.min(1, Math.max(0, (h - 600) / 220)) * 0.13 - 0.06;
+    this.fitFrac();
     this.camera.updateProjectionMatrix();
     const ppm = h / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
     (this.flies.material as ShaderMaterial).uniforms.uPx.value = ppm * this.dpr;

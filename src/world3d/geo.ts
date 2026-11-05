@@ -44,7 +44,7 @@ export function merge(gs: BufferGeometry[]) {
 
 /** A rock: an icosahedron pushed about by noise, faceted. */
 export function rockGeo(seed = 0, detail = 1) {
-  const g = new IcosahedronGeometry(1, detail).toNonIndexed();
+  const g = new IcosahedronGeometry(1, detail);
   const p = g.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
