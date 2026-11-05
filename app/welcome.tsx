@@ -29,7 +29,7 @@ export default function Welcome() {
 
   const finish = () => {
     set({ onboarded: true, name: name.trim() || "there", reminder: when });
-    router.replace("/level");
+    router.replace("/home");
   };
 
   return (

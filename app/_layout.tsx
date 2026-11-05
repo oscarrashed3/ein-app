@@ -30,6 +30,7 @@ function Routes() {
       <Stack.Screen name="index" options={{ animation: "fade" }} />
       <Stack.Screen name="welcome" options={{ animation: "fade" }} />
       <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
+      <Stack.Screen name="learnings" />
       <Stack.Screen name="lesson/[id]" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
     </Stack>
   );

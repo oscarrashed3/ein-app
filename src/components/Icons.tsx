@@ -76,3 +76,9 @@ export const LeonIcon = ({ color = "#0A0938", size = 24 }: P) => (
     <Circle cx={16.5} cy={12.5} r={0.9} fill={color} />
   </Svg>
 );
+/** Home tab: a simple house, line only. */
+export const HomeIcon = ({ color = "#0A0938", size = 22 }: P) => (
+  <Svg width={size} height={size} viewBox="0 0 22 22">
+    <Path d="M3.5 10L11 3.5 18.5 10V18.5H13.5V13.5H8.5V18.5H3.5Z" stroke={color} strokeWidth={1.5} fill="none" strokeLinejoin="round" />
+  </Svg>
+);

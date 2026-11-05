@@ -154,7 +154,7 @@ export function JourneyHud({ n, vpw, away, onBack, leon, onCard, card = true }: 
 }
 
 /** The daily-quest chest. */
-function Chest({ open, big }: { open: boolean; big?: boolean }) {
+export function Chest({ open, big }: { open: boolean; big?: boolean }) {
   const k = big ? 2.2 : 1;
   return (
     <Svg width={18 * k} height={16 * k} viewBox="0 0 18 16">
@@ -173,7 +173,7 @@ function Freeze() {
   );
 }
 
-function Flame() {
+export function Flame() {
   return (
     <Svg width={14} height={17} viewBox="0 0 14 17">
       <Path d="M7 1 C8.4 4 12.5 6 12.5 10.6 C12.5 14 10 16 7 16 C4 16 1.5 14 1.5 10.9 C1.5 8.4 3 6.8 4.4 5.6 C4.6 7.6 5.4 8.6 6.4 9 C6 6 6.2 3.4 7 1Z" fill={c.mint} />
@@ -181,7 +181,7 @@ function Flame() {
     </Svg>
   );
 }
-function Spark() {
+export function Spark() {
   return (
     <Svg width={15} height={15} viewBox="0 0 16 16">
       <Path d="M8 0.8 C8.7 5 11 7.3 15.2 8 C11 8.7 8.7 11 8 15.2 C7.3 11 5 8.7 0.8 8 C5 7.3 7.3 5 8 0.8Z" fill={c.gold} />
