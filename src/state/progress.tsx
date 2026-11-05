@@ -22,6 +22,7 @@ export type State = {
   chests?: string[]; // days whose daily-quest chest was opened
   tod: "auto" | "dawn" | "day" | "dusk" | "night"; // prototype: force the map's time of day
   unlockAll?: boolean; // prototype: open every wardrobe item
+  map?: "3d" | "simple"; // Journey drawn as the 3D world (default) or the flat map
 };
 
 /** Leon's look. Colour is earned: gold, purple and mint arrive with modules 1, 2 and 3. */

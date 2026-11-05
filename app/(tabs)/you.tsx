@@ -211,6 +211,7 @@ export default function Profile() {
           <T style={st.rowT}>Shared with your manager</T>
           <T v="small">Completion only</T>
         </View>
+        <Row t="Simple map" s={s.map === "simple" ? "On: flat map, lighter on older phones" : "Off: the 3D world"} onPress={() => set({ map: s.map === "simple" ? "3d" : "simple" })} />
       </Appear>
 
       <Appear i={7} style={[st.sec, st.demo]}>
