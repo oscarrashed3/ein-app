@@ -17,7 +17,7 @@ import { World, type StopState } from "./World";
 
 const L = 120; // Leon's drawn width in px before perspective scaling
 const LH = (L * 150) / 250;
-const LEON_M = 1.7; // how wide Leon is in the world, in metres
+const LEON_M = 2.0; // how wide Leon is in the world, in metres
 
 type Moment = { k: "zone"; zone: 1 | 2 | 3 } | { k: "colour"; module: number; from: Skin; to: Skin };
 

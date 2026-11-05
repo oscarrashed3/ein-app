@@ -84,7 +84,7 @@ export function groundAt(x: number, z: number) {
 // ---- stops, bottom to top ----
 const STONES: [number, number][] = [
   [0.3, -4.4], [2.3, -6.2], [2.9, -8.4], [1.0, -10.2], [-1.4, -11.8], [-1.0, -14.0], [1.1, -15.8],
-];
+].map(([x, z]) => [0.5 + (x - 0.5) * 0.6, z] as [number, number]);
 export const BRIDGE = { x: 0.9, z0: -26.4, z1: -33.8, deck: 0.82, sag: 0.22, width: 1.55 };
 const bridgeZ = (k: number) => mix(BRIDGE.z0 + 0.74, BRIDGE.z1 - 0.74, k / 4);
 export const deckY = (z: number) => {
@@ -113,7 +113,7 @@ export function stops(ids: { id: string; module: number; practice?: boolean }[])
       const y = deckY(z);
       out.push({ id: l.id, kind: "plank", module: 2, pos: v(BRIDGE.x, y, z), foot: v(BRIDGE.x, y + 0.06, z) });
     } else {
-      const at = [[-1.7, -42.2], [2.6, -46.2], [-0.9, -50.2]][r];
+      const at = [[-1.0, -42.2], [2.0, -46.2], [-0.6, -50.2]][r];
       const item = (["map", "compass", "lantern"] as const)[r++];
       const g = groundAt(at[0], at[1]);
       out.push({ id: l.id, kind: "item", module: 3, item, pos: v(at[0], g, at[1]), foot: v(at[0] + (at[0] < 0 ? 1.2 : -1.2), groundAt(at[0] + (at[0] < 0 ? 1.2 : -1.2), at[1] + 0.3), at[1] + 0.3) });

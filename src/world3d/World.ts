@@ -133,7 +133,7 @@ export class World {
   }
   exposure = 1;
   dpr = 1;
-  rig = { x: 1.2, y: 3.6, z: 10.5, frac: 0.08, fo: 0 };
+  rig = { x: 1.2, y: 4.0, z: 11.5, frac: 0.07, fo: 0 };
   setReduced(r: boolean) {
     this.reduce = r;
   }
@@ -141,7 +141,9 @@ export class World {
     this.size.set(w, h);
     this.camera.aspect = w / h;
     // Portrait phones get a slightly wider lens so the path never feels cramped.
-    this.camera.fov = w / h < 0.6 ? 54 : 46;
+    this.camera.fov = w / h < 0.6 ? 58 : 48;
+    // Leon sits in the clear band between the header and the bottom card, whatever the phone's height.
+    this.rig.frac = Math.min(1, Math.max(0, (h - 600) / 220)) * 0.13 - 0.06;
     this.camera.updateProjectionMatrix();
     const ppm = h / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
     (this.flies.material as ShaderMaterial).uniforms.uPx.value = ppm * this.dpr;
@@ -316,12 +318,12 @@ export class World {
     const x = (p.x + ahead.x + back.x) / 3;
     const R = this.rig;
     // Low and behind, like a walking camera; the land and sea fill the frame, the sky opens above.
-    const camPos = new Vector3(p.x * 0.65 + x * 0.35 + R.x * 0.6, Math.max(p.y, back.y * 0.5 + p.y * 0.5) + R.y + Math.max(0, ahead.y - p.y) * 0.45, p.z + R.z);
+    const camPos = new Vector3(p.x * 0.75 + x * 0.25 + R.x * 0.3, Math.max(p.y, back.y * 0.5 + p.y * 0.5) + R.y + Math.max(0, ahead.y - p.y) * 0.45, p.z + R.z);
     // Pitch so the point on the path sits a little below the middle of the screen.
     const dy = camPos.y - p.y, dz = camPos.z - p.z;
     const half = (this.camera.fov * Math.PI) / 360;
     const pitch = Math.atan2(dy, dz) - Math.atan(R.frac * Math.tan(half)) - (ahead.y - p.y) * 0.012;
-    const hx = p.x + (ahead.x - p.x) * 0.35 - camPos.x, hz = ahead.z - camPos.z;
+    const hx = p.x + (ahead.x - p.x) * 0.2 - camPos.x, hz = ahead.z - camPos.z;
     const hl = Math.hypot(hx, hz);
     const dir = new Vector3((hx / hl) * Math.cos(pitch), -Math.sin(pitch), (hz / hl) * Math.cos(pitch));
     this.camera.position.copy(camPos);
